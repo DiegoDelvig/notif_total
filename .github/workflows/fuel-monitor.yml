@@ -1,0 +1,41 @@
+name: Fuel Monitor
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # S'exécute toutes les 15 minutes
+  workflow_dispatch: # Permet de lancer le script manuellement depuis GitHub
+
+jobs:
+  check-fuel:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Autorise le commit du state.json
+
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v4
+
+      - name: Installation de Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Installation des dépendances
+        run: pip install -r requirements.txt
+
+      - name: Exécution de la surveillance
+        env:
+          STATION_ID: ${{ secrets.STATION_ID }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          WATCH: ${{ secrets.WATCH }}
+        # Le flag --once empêche la boucle infinie (GitHub le lance toutes les 15 min)
+        run: python -m src.main --once
+
+      - name: Sauvegarde de l'état (state.json)
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add state.json
+          # Commit seulement s'il y a des changements (pour éviter les erreurs)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 update state.json" && git push)
