@@ -1,1 +1,1 @@
-{"fails": 0, "fail_alerted": false, "missing_alerted": false, "available": [], "stale_alerted": false}
+{"fails": 0, "fail_alerted": false, "missing_alerted": false, "available": ["E10"], "stale_alerted": false}
